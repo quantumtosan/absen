@@ -200,7 +200,6 @@ if uploaded_file:
         st.subheader("📌 Surat Panggilan (≥3 Tidak Hadir)")
         df_tidak_hadir_lebih3 = df_tidak_hadir_lebih3.sort_values(by="Jumlah Tidak Hadir", ascending=False)
         st.dataframe(df_tidak_hadir_lebih3[["ID", "Nama", "Department", "Jumlah Tidak Hadir"]].style.map(highlight_id, subset=["ID"]))
-                     .style.map(highlight_id, subset=["ID"]))
 
         hari_list = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]
         for _, row in df_tidak_hadir_lebih3.iterrows():
