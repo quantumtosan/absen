@@ -139,18 +139,18 @@ if uploaded_file:
     # --- TAMPILKAN DI STREAMLIT ---
     st.subheader("📌 Rekap Telat")
     if not df_telat.empty:
-        st.dataframe(df_telat.style.applymap(highlight_id, subset=["ID"]))
+        st.dataframe(df_telat.style.map(highlight_id, subset=["ID"]))
     else:
         st.info("Tidak ada data karyawan telat")
 
     st.subheader("📌 Rekap Tidak Hadir")
     if not df_tidak_hadir.empty:
-        st.dataframe(df_tidak_hadir.style.applymap(highlight_id, subset=["ID"]))
+        st.dataframe(df_tidak_hadir.style.map(highlight_id, subset=["ID"]))
     else:
         st.info("Tidak ada data karyawan tidak hadir")
 
     st.subheader("📌 Jumlah Kehadiran")
-    st.dataframe(df_jumlah_absen.style.applymap(highlight_id, subset=["ID"]))
+    st.dataframe(df_jumlah_absen.style.map(highlight_id, subset=["ID"]))
 
     # === Simpan semua sheet utama ke Excel ===
     hasil_rekap_path = os.path.join(UPLOAD_FOLDER, f"hasil_rekap_{uploaded_file.name}")
