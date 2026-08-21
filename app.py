@@ -35,7 +35,7 @@ def sort_nicely(l):
     return sorted(l, key=alphanum_key)
  
 def highlight_id(val):
-    if str(val) in highlight_ids:
+    if str(val).strip().lower() == "host":
         return "background-color: lightgreen; color: black; font-weight: bold;"
     return ""
  
