@@ -148,7 +148,7 @@ if uploaded_file:
 
     st.subheader("📌 Rekap Tidak Hadir")
     if not df_tidak_hadir.empty:
-        st.dataframe(df_tidak_hadir.style.map(highlight_id, subset=["ID"]))
+        st.dataframe(df_tidak_hadir[["ID", "Nama", "Department", "Tanggal Tidak Hadir"]].style.map(highlight_id, subset=["ID"]))
     else:
         st.info("Tidak ada data karyawan tidak hadir")
 
