@@ -10,14 +10,14 @@ from docxtpl import DocxTemplate
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font
 from openpyxl.utils.dataframe import dataframe_to_rows
-
+ 
 # --- Konfigurasi upload ---
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
+ 
 # --- Daftar ID yang di-highlight ---
 highlight_ids = {"119","111","112","106","13","18","71","19","148","90","82","142","127"}
-
+ 
 # --- Helper ---
 def clean_id(id_value):
     if pd.isna(id_value):
@@ -26,35 +26,35 @@ def clean_id(id_value):
     if id_str.endswith(".0"):
         id_str = id_str[:-2]
     return id_str
-
+ 
 def sort_nicely(l):
     def convert(text):
         return int(text) if text.isdigit() else text.lower()
     def alphanum_key(key):
         return [convert(c) for c in re.split("([0-9]+)", key)]
     return sorted(l, key=alphanum_key)
-
+ 
 def highlight_id(val):
     if str(val) in highlight_ids:
         return "background-color: lightgreen; color: black; font-weight: bold;"
     return ""
-
+ 
 # --- Streamlit UI ---
 st.set_page_config(page_title="Rekap Absensi PT. QUANTUM", layout="wide")
 st.title("📑 Rekap Absensi PT. QUANTUM")
-
+ 
 uploaded_file = st.file_uploader("Upload File Absensi (.xlsx/.xls)", type=["xlsx", "xls"])
-
+ 
 if uploaded_file:
     # Simpan sementara
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_path = os.path.join(UPLOAD_FOLDER, f"{timestamp}_{uploaded_file.name}")
     with open(file_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
-
+ 
     # === BACA SEMUA SHEET ===
     all_sheets = pd.read_excel(file_path, sheet_name=None)
-
+ 
     # Gabung semua sheet
     df_all = []
     for sheet_name, df in all_sheets.items():
@@ -66,7 +66,7 @@ if uploaded_file:
         df_fix = pd.DataFrame(column_mapping)
         df_all.append(df_fix)
     df_fix = pd.concat(df_all, ignore_index=True)
-
+ 
     # Normalisasi
     df_fix["Nama"] = df_fix["Nama"].astype(str).str.strip()
     df_fix["ID"] = df_fix["ID"].apply(clean_id)
@@ -76,10 +76,10 @@ if uploaded_file:
     df_fix = df_fix.dropna(subset=["Tgl/Waktu"])
     df_fix["Tanggal_Saja"] = df_fix["Tgl/Waktu"].dt.date
     df_fix = df_fix.drop_duplicates(subset=["ID","Tanggal_Saja"])
-
+ 
     # ID unik
     semua_id_unik = sort_nicely(list(set(df_fix["ID"])))
-
+ 
     # Rentang tanggal kerja (tanpa Minggu)
     if not df_fix["Tgl/Waktu"].empty:
         tanggal_awal = df_fix["Tgl/Waktu"].dt.date.min()
@@ -87,7 +87,7 @@ if uploaded_file:
         semua_tanggal = [tgl for tgl in pd.date_range(tanggal_awal, tanggal_akhir).date if pd.Timestamp(tgl).weekday()!=6]
     else:
         semua_tanggal = []
-
+ 
     # Mapping ID → Nama
     id_to_nama = dict(zip(df_fix["ID"], df_fix["Nama"]))
     id_to_dept = dict(zip(df_fix["ID"], df_fix["Department"]))
@@ -109,7 +109,7 @@ if uploaded_file:
     "Tgl/Waktu Telat": row["Tgl/Waktu"]
 })
     df_telat = pd.DataFrame(rekap_telat)
-
+ 
     # ========================
     # REKAP TIDAK HADIR + JUMLAH
     # ========================
@@ -121,8 +121,8 @@ if uploaded_file:
         hadir_tanggal = set(data_id["Tgl/Waktu"].dt.date) if not data_id.empty else set()
         tidak_hadir_tanggal = [tgl for tgl in semua_tanggal if tgl not in hadir_tanggal]
         for tgl in tidak_hadir_tanggal:
-   rekap_tidak_hadir.append({"ID":id_karyawan,"Nama":nama_karyawan,"Tanggal Tidak Hadir":tgl})
-    
+            rekap_tidak_hadir.append({"ID":id_karyawan,"Nama":nama_karyawan,"Tanggal Tidak Hadir":tgl})
+ 
         jumlah_absen_total.append({
             "ID":id_karyawan,
             "Nama":nama_karyawan,
@@ -131,30 +131,30 @@ if uploaded_file:
         })
     df_tidak_hadir = pd.DataFrame(rekap_tidak_hadir)
     df_jumlah_absen = pd.DataFrame(jumlah_absen_total)
-
+ 
     if not df_tidak_hadir.empty:
         jumlah_tidak_hadir = df_tidak_hadir.groupby("ID").size().reset_index(name="Jumlah Tidak Hadir")
         df_jumlah_absen = pd.merge(df_jumlah_absen, jumlah_tidak_hadir, on="ID", how="left")
     else:
         df_jumlah_absen["Jumlah Tidak Hadir"] = 0
     df_jumlah_absen["Jumlah Tidak Hadir"] = df_jumlah_absen["Jumlah Tidak Hadir"].fillna(0).astype(int)
-
+ 
     # --- TAMPILKAN DI STREAMLIT ---
     st.subheader("📌 Rekap Telat")
     if not df_telat.empty:
         st.dataframe(df_telat.style.map(highlight_id, subset=["ID"]))
     else:
         st.info("Tidak ada data karyawan telat")
-
+ 
     st.subheader("📌 Rekap Tidak Hadir")
     if not df_tidak_hadir.empty:
         st.dataframe(df_tidak_hadir.style.map(highlight_id, subset=["ID"]))
     else:
         st.info("Tidak ada data karyawan tidak hadir")
-
+ 
     st.subheader("📌 Jumlah Kehadiran")
     st.dataframe(df_jumlah_absen.style.map(highlight_id, subset=["ID"]))
-
+ 
     # === Simpan semua sheet utama ke Excel ===
     hasil_rekap_path = os.path.join(UPLOAD_FOLDER, f"hasil_rekap_{uploaded_file.name}")
     with pd.ExcelWriter(hasil_rekap_path, engine="openpyxl") as writer:
@@ -163,10 +163,10 @@ if uploaded_file:
         if not df_tidak_hadir.empty:
             df_tidak_hadir.to_excel(writer, sheet_name="Karyawan Tidak Hadir", index=False)
         df_jumlah_absen.to_excel(writer, sheet_name="Jumlah Kehadiran", index=False)
-
+ 
     # --- Load workbook untuk highlight & tambah sheet baru ---
     wb = load_workbook(hasil_rekap_path)
-
+ 
     # Highlight ID tertentu di semua sheet
     for sheet in wb.sheetnames:
         ws = wb[sheet]
@@ -175,7 +175,7 @@ if uploaded_file:
                 if str(cell.value) in highlight_ids:
                     cell.fill = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
                     cell.font = Font(color="000000", bold=True)
-
+ 
     # --- Sheet Tidak Hadir ≥3 Hari ---
     df_tidak_hadir_lebih3 = df_jumlah_absen[df_jumlah_absen["Jumlah Tidak Hadir"]>=3].copy()
     if not df_tidak_hadir_lebih3.empty:
@@ -189,34 +189,34 @@ if uploaded_file:
                 if str(cell.value) in highlight_ids:
                     cell.fill = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
                     cell.font = Font(color="000000", bold=True)
-
+ 
     wb.save(hasil_rekap_path)
-
+ 
     # --- Download file Excel ---
     with open(hasil_rekap_path, "rb") as f:
         st.download_button("📥 Download Rekap Excel", f, file_name=os.path.basename(hasil_rekap_path))
-
+ 
     # --- Surat Panggilan (≥3 Tidak Hadir) ---
     if not df_tidak_hadir_lebih3.empty:
         st.subheader("📌 Surat Panggilan (≥3 Tidak Hadir)")
         df_tidak_hadir_lebih3 = df_tidak_hadir_lebih3.sort_values(by="Jumlah Tidak Hadir", ascending=False)
         st.dataframe(df_tidak_hadir_lebih3[["ID", "Nama", "Department", "Jumlah Tidak Hadir"]].style.map(highlight_id, subset=["ID"]))
-
+ 
         hari_list = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]
         for _, row in df_tidak_hadir_lebih3.iterrows():
             spg_filename = f"surat_panggilan_{row['ID']}_{uploaded_file.name.rsplit('.',1)[0]}.docx"
             spg_path = os.path.join(UPLOAD_FOLDER, spg_filename)
             template_path = os.path.join("templates", "template_surat_panggilan.docx")
             doc = DocxTemplate(template_path)
-
+ 
             df_absen_id = df_tidak_hadir[df_tidak_hadir["ID"]==row['ID']]
             semua_tgl = df_absen_id["Tanggal Tidak Hadir"].apply(lambda x: x.strftime("%d %B %Y")).tolist()
             tanggal_terakhir = ", ".join(semua_tgl)
             jumlah_hari = len(semua_tgl)
-
+ 
             tanggal_surat = date.today()
             nama_hari = hari_list[tanggal_surat.weekday()]
-
+ 
             context = {
                 "NAMA": row["Nama"],
                 "ID": row["ID"],
@@ -224,9 +224,9 @@ if uploaded_file:
                 "TANGGAL_ABSEN": tanggal_terakhir,
                 "TANGGAL_SURAT": f"{nama_hari}, {tanggal_surat.strftime('%d %B %Y')}"
             }
-
+ 
             doc.render(context)
             doc.save(spg_path)
-
+ 
             with open(spg_path, "rb") as f:
                 st.download_button(f"📥 Download Surat Panggilan untuk {row['Nama']}", f, file_name=spg_filename)
