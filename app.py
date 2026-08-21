@@ -142,18 +142,18 @@ if uploaded_file:
     # --- TAMPILKAN DI STREAMLIT ---
     st.subheader("📌 Rekap Telat")
     if not df_telat.empty:
-        st.dataframe(df_telat.style.map(highlight_id, subset=["ID"]))
+        st.dataframe(df_telat[["ID", "Nama", "Department", "Tgl/Waktu Telat"]].style.map(highlight_id, subset=["Department"]))
     else:
         st.info("Tidak ada data karyawan telat")
  
     st.subheader("📌 Rekap Tidak Hadir")
     if not df_tidak_hadir.empty:
-        st.dataframe(df_tidak_hadir.style.map(highlight_id, subset=["ID"]))
+        st.dataframe(df_tidak_hadir[["ID", "Nama", "Department", "Tanggal Tidak Hadir"]].style.map(highlight_id, subset=["Department"]))
     else:
         st.info("Tidak ada data karyawan tidak hadir")
  
     st.subheader("📌 Jumlah Kehadiran")
-    st.dataframe(df_jumlah_absen.style.map(highlight_id, subset=["ID"]))
+    st.dataframe(df_jumlah_absen.style.map(highlight_id, subset=["Department"]))
  
     # === Simpan semua sheet utama ke Excel ===
     hasil_rekap_path = os.path.join(UPLOAD_FOLDER, f"hasil_rekap_{uploaded_file.name}")
@@ -200,7 +200,7 @@ if uploaded_file:
     if not df_tidak_hadir_lebih3.empty:
         st.subheader("📌 Surat Panggilan (≥3 Tidak Hadir)")
         df_tidak_hadir_lebih3 = df_tidak_hadir_lebih3.sort_values(by="Jumlah Tidak Hadir", ascending=False)
-        st.dataframe(df_tidak_hadir_lebih3[["ID", "Nama", "Department", "Jumlah Tidak Hadir"]].style.map(highlight_id, subset=["ID"]))
+        st.dataframe(df_tidak_hadir_lebih3[["ID", "Nama", "Department", "Jumlah Tidak Hadir"]].style.map(highlight_id, subset=["Department"]))
  
         hari_list = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]
         for _, row in df_tidak_hadir_lebih3.iterrows():
