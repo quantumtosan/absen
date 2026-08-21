@@ -59,7 +59,7 @@ if uploaded_file:
     df_all = []
     for sheet_name, df in all_sheets.items():
         max_cols = len(df.columns)
-        column_names = ["Perusahaan", "Nama", "ID", "Tgl/Waktu", "Department", "Mesin_ID", "Kolom6", "Status"]
+        column_names = ["Department", "Nama", "ID", "Tgl/Waktu", "Mesin_ID", "Kolom6", "Status", "Kolom8"]
         column_mapping = {}
         for i in range(min(max_cols, len(column_names))):
             column_mapping[column_names[i]] = df.iloc[:, i]
