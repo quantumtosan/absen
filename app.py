@@ -90,7 +90,7 @@ if uploaded_file:
 
     # Mapping ID → Nama
     id_to_nama = dict(zip(df_fix["ID"], df_fix["Nama"]))
-
+    id_to_dept = dict(zip(df_fix["ID"], df_fix["Department"]))
     # ========================
     # REKAP TELAT
     # ========================
@@ -103,10 +103,11 @@ if uploaded_file:
         telat_id = data_id[data_id["Tgl/Waktu"].dt.time > jam_telat]
         for _, row in telat_id.iterrows():
             rekap_telat.append({
-                "ID": id_karyawan,
-                "Nama": nama_karyawan,
-                "Tgl/Waktu Telat": row["Tgl/Waktu"]
-            })
+    "ID": id_karyawan,
+    "Nama": nama_karyawan,
+    "Department": id_to_dept.get(id_karyawan, "Unknown"), # <-- Sisipkan ini
+    "Tgl/Waktu Telat": row["Tgl/Waktu"]
+})
     df_telat = pd.DataFrame(rekap_telat)
 
     # ========================
@@ -124,6 +125,7 @@ if uploaded_file:
         jumlah_absen_total.append({
             "ID":id_karyawan,
             "Nama":nama_karyawan,
+            "Department": id_to_dept.get(id_karyawan, "Unknown"),
             "Jumlah Absen Total":len(hadir_tanggal)
         })
     df_tidak_hadir = pd.DataFrame(rekap_tidak_hadir)
@@ -197,7 +199,7 @@ if uploaded_file:
     if not df_tidak_hadir_lebih3.empty:
         st.subheader("📌 Surat Panggilan (≥3 Tidak Hadir)")
         df_tidak_hadir_lebih3 = df_tidak_hadir_lebih3.sort_values(by="Jumlah Tidak Hadir", ascending=False)
-        st.dataframe(df_tidak_hadir_lebih3[["ID","Nama","Jumlah Tidak Hadir"]]
+        st.dataframe(df_tidak_hadir_lebih3[["ID", "Nama", "Department", "Jumlah Tidak Hadir"]].style.map(highlight_id, subset=["ID"]))
                      .style.map(highlight_id, subset=["ID"]))
 
         hari_list = ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"]
