@@ -121,12 +121,7 @@ if uploaded_file:
         hadir_tanggal = set(data_id["Tgl/Waktu"].dt.date) if not data_id.empty else set()
         tidak_hadir_tanggal = [tgl for tgl in semua_tanggal if tgl not in hadir_tanggal]
         for tgl in tidak_hadir_tanggal:
-    rekap_tidak_hadir.append({
-        "ID": id_karyawan,
-        "Nama": nama_karyawan,
-        "Department": id_to_dept.get(id_karyawan, "Unknown"),  # <-- WAJIB ADA INI
-        "Tanggal Tidak Hadir": tgl
-    })
+   rekap_tidak_hadir.append({"ID":id_karyawan,"Nama":nama_karyawan,"Tanggal Tidak Hadir":tgl})
     
         jumlah_absen_total.append({
             "ID":id_karyawan,
